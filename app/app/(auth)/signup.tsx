@@ -8,7 +8,7 @@ const Signup = () => {
     </View>
   )
 }
-
+  
 export default Signup
 
 const styles = StyleSheet.create({})

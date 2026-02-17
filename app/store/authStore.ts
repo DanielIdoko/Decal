@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import * as SecureStore from "expo-secure-store";
+import * as WebBrowser from "expo-web-browser";
+import * as AuthSession from "expo-auth-session";
 import { supabase } from "../lib/supabase";
 
 interface AuthState {
@@ -14,7 +16,9 @@ interface AuthState {
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 }
-// (() => ({}))
+
+WebBrowser.maybeCompleteAuthSession();
+
 export const useAuthStore = create<AuthState>((set) => ({
   session: null,
   user: null,
@@ -67,12 +71,51 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   signInWithGoogle: async () => {
-    await supabase.auth.signInWithOAuth({
+    const redirectUrl = AuthSession.makeRedirectUri({
+      scheme: "decal",
+      path: "auth/callback",
+    });
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: "decal://",
+        redirectTo: redirectUrl,
+        skipBrowserRedirect: true,
       },
     });
+
+    if (error) throw error;
+
+    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+
+    if (result.type !== "success") {
+      throw new Error("Google authentication cancelled");
+    }
+
+    const url = result.url;
+
+    // Extract fragment part after "#"
+    const fragment = url.split("#")[1];
+
+    if (!fragment) {
+      throw new Error("No auth data returned");
+    }
+
+    const params = new URLSearchParams(fragment);
+
+    const access_token = params.get("access_token");
+    const refresh_token = params.get("refresh_token");
+
+    if (!access_token || !refresh_token) {
+      throw new Error("Failed to retrieve authentication tokens");
+    }
+
+    const { error: sessionError } = await supabase.auth.setSession({
+      access_token,
+      refresh_token,
+    });
+
+    if (sessionError) throw sessionError;
   },
 
   signOut: async () => {

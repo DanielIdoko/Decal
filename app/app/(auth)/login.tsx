@@ -19,6 +19,7 @@ import CustomButton from "@/components/ui/CustomButton";
 import { Image } from "react-native";
 import Toast from "@/components/ui/Toast";
 import { useToastStore } from "@/store/toastStore";
+import { router } from "expo-router";
 
 // show("Login successful", "success");
 // show("Invalid credentials", "error");
@@ -86,8 +87,15 @@ export default function LoginScreen() {
 
               showToast("Login successful", "success");
             } catch (err: any) {
-              if (err.message?.includes("Invalid login credentials")) {
-                showToast("Account not found. Please sign up first.", "error");
+              if (err.status === 400) {
+                // showToast("Account not found. Please sign up first.", "error");
+                showToast(
+                  "Account not found. Redirecting to sign up...",
+                  "error",
+                );
+                setTimeout(() => {
+                  router.push("/(auth)/signup");
+                }, 1500);
               } else {
                 showToast(err.message || "Login failed", "error");
               }
