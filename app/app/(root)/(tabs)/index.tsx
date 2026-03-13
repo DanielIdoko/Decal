@@ -1,6 +1,7 @@
 import { Redirect } from "expo-router";
 import { useAuthStore } from "@/store/authStore";
-import { ScrollView, Text } from "react-native";
+import { ScrollView, StyleSheet, Text } from "react-native";
+import Header from "@/components/ui/Header";
 
 export default function Index() {
   const session = useAuthStore((s) => s.session);
@@ -10,14 +11,14 @@ export default function Index() {
   }
 
   return (
-    <ScrollView>
-      <Text
-        style={{
-          fontSize: 80,
-        }}
-      >
-        Home
-      </Text>
+    <ScrollView style={design.container}>
+      <Header />
     </ScrollView>
   );
 }
+
+const design = StyleSheet.create({
+  container: {
+    padding: 10,
+  },
+});

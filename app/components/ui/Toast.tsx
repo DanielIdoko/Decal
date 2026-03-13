@@ -17,7 +17,7 @@ export default function Toast() {
 
       setTimeout(() => {
         hide();
-      }, 3000);
+      }, 4000);
     } else {
       Animated.timing(translateY, {
         toValue: -100,

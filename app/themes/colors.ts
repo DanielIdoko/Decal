@@ -11,7 +11,7 @@ export const colors = {
   accentLight: "#FEF3C7", // Amber 100
 
   /* BACKGROUNDS */
-  background: "#F9FAFB", // Soft off-white
+  background: "#fcfcfc", // Soft off-white
   surface: "#FFFFFF", // Cards
   mutedSurface: "#F3F4F6", // Subtle sections
 
@@ -23,7 +23,7 @@ export const colors = {
   /* STATES */
   success: "#22C55E",
   warning: "#F59E0B",
-  error: "#EF4444",
+  error: "#f06060",
   info: "#3B82F6",
 
   /* BORDERS */

@@ -1,3 +1,4 @@
-import googleIcon from "google-icon";
+import googleIcon from "./google-icon.png";
+import signUpImage from "./signup_image.png";
 
-export { googleIcon };
+export { googleIcon, signUpImage };

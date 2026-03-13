@@ -3,7 +3,7 @@ import * as SecureStore from "expo-secure-store";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
 import { supabase } from "../lib/supabase";
-
+import { Platform } from "react-native";
 interface AuthState {
   session: any | null;
   user: any | null;
@@ -26,22 +26,40 @@ export const useAuthStore = create<AuthState>((set) => ({
   error: null,
 
   initialize: async () => {
-    const stored = await SecureStore.getItemAsync("session");
-
-    if (stored) {
-      const session = JSON.parse(stored);
-      set({ session, user: session.user, loading: false });
+    if (Platform.OS === "web") {
+      const stored = localStorage.getItem("session");
+      if (stored) {
+        const session = JSON.parse(stored);
+        set({ session, user: session.user, loading: false });
+      } else {
+        set({ loading: false });
+      }
+      return;
     } else {
-      set({ loading: false });
+      const stored = await SecureStore.getItemAsync("session");
+      if (stored) {
+        const session = JSON.parse(stored);
+        set({ session, user: session.user, loading: false });
+      } else {
+        set({ loading: false });
+      }
     }
 
     supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session) {
-        await SecureStore.setItemAsync("session", JSON.stringify(session));
         set({ session, user: session.user });
+        if (Platform.OS === "web") {
+          localStorage.setItem("session", JSON.stringify(session));
+        } else {
+          await SecureStore.setItemAsync("session", JSON.stringify(session));
+        }
       } else {
-        await SecureStore.deleteItemAsync("session");
         set({ session: null, user: null });
+        if (Platform.OS === "web") {
+          localStorage.removeItem("session");
+        } else {
+          await SecureStore.deleteItemAsync("session");
+        }
       }
     });
   },
@@ -76,11 +94,24 @@ export const useAuthStore = create<AuthState>((set) => ({
       path: "auth/callback",
     });
 
+    // On Web, Supabase handles the redirect automatically without needing WebBrowser
+    if (Platform.OS === "web") {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: redirectUrl,
+        },
+      });
+      if (error) throw error;
+      return;
+    }
+
+    // NATIVE FLOW (iOS/Android)
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: redirectUrl,
-        skipBrowserRedirect: true,
+        skipBrowserRedirect: true, // Only for native
       },
     });
 

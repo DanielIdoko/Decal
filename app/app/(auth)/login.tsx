@@ -1,11 +1,4 @@
-import {
-  View,
-  Text,
-  TextInput,
-  Button,
-  ActivityIndicator,
-  ScrollView,
-} from "react-native";
+import { View, Text, TextInput, Button, ActivityIndicator } from "react-native";
 import { Formik } from "formik";
 import { useState } from "react";
 import { Link } from "expo-router";
@@ -14,12 +7,18 @@ import { StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
 import { zodValidate } from "@/utils/zodFormikAdapter";
-import { loginSchema } from "@/validators/auth.schema";
+import {
+  LoginFormValues,
+  loginSchema,
+  SignupFormValues,
+} from "@/validators/auth.schema";
 import CustomButton from "@/components/ui/CustomButton";
 import { Image } from "react-native";
 import Toast from "@/components/ui/Toast";
 import { useToastStore } from "@/store/toastStore";
 import { router } from "expo-router";
+import { signUpImage } from "@/assets/images";
+import { toFormikValidationSchema } from "zod-formik-adapter";
 
 // show("Login successful", "success");
 // show("Invalid credentials", "error");
@@ -34,53 +33,52 @@ export default function LoginScreen() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
+  const initialValues: LoginFormValues = {
+    email: "",
+    password: "",
+  };
+
   return (
-    <ScrollView
-      style={{
-        paddingVertical: 70,
-        paddingHorizontal: 13,
-      }}
-    >
-      <Text
-        style={{
-          fontSize: 29,
-          fontWeight: "bold",
-          color: colors.primary,
-          textAlign: "center",
-        }}
-      >
-        Decal
-      </Text>
-      <Text
-        style={{
-          color: colors.textPrimary,
-          fontSize: 30,
-          textAlign: "center",
-          fontWeight: "bold",
-          marginTop: 30,
-        }}
-      >
-        Log In To Your Account.
-      </Text>
-      <Text
-        style={{
-          // padding: 20,
-          color: colors.textDisabled,
-          fontSize: 13,
-          textAlign: "center",
-        }}
-      >
-        Monitor your health, weight, etc. better by logging in now.
-      </Text>
+    <View style={styles.container}>
       <View
         style={{
-          justifyContent: "center",
-          marginTop: 40,
+          backgroundColor: "rgb(244, 245, 246)",
+          height: 250,
+          position: "absolute",
+          overflow: "hidden",
+          top: 0,
+          right: 0,
+          left: 0,
+          borderBottomLeftRadius: 30,
+          borderBottomRightRadius: 30,
         }}
+      >
+        <Image
+          source={signUpImage}
+          style={{
+            position: "absolute",
+            width: "100%",
+            height: "100%",
+          }}
+        />
+        <Text style={styles.title}>Login To Your Account</Text>
+        <Text style={styles.subtitle}>
+          Monitor and track your weight, calories and live healthier with Decal.
+        </Text>
+      </View>
+
+      <View
+        style={
+          {
+            // justifyContent: "center",
+            // marginTop: 120,
+          }
+        }
       >
         <Formik
           initialValues={{ email: "", password: "" }}
-          validate={zodValidate(loginSchema)}
+          validationSchema={toFormikValidationSchema(loginSchema)}
+          // validate={zodValidate(loginSchema)}
           onSubmit={async (values, { setSubmitting }) => {
             try {
               await signIn(values.email, values.password);
@@ -107,6 +105,7 @@ export default function LoginScreen() {
           {({
             handleChange,
             handleSubmit,
+            handleBlur,
             values,
             errors,
             touched,
@@ -114,63 +113,51 @@ export default function LoginScreen() {
           }) => (
             <>
               {/* EMAIL */}
-              <Text style={styles.label}>Email Address</Text>
+              <Text style={(styles.label, { marginTop: 100 })}>
+                Email Address*
+              </Text>
               <TextInput
-                placeholder="Enter your email"
-                value={values.email}
+                placeholder="Enter your email address"
+                placeholderTextColor={colors.textDisabled}
+                style={styles.input}
                 onChangeText={handleChange("email")}
+                onBlur={handleBlur("email")}
+                value={values.email}
                 autoCapitalize="none"
                 keyboardType="email-address"
-                style={{
-                  color: colors.textPrimary,
-                  borderWidth: 1,
-                  borderRadius: 30,
-                  borderColor: errors.email && touched.email ? "red" : "#ccc",
-                  padding: 12,
-                  marginBottom: 5,
-                }}
               />
               {touched.email && errors.email && (
-                <Text style={{ color: "red" }}>{errors.email}</Text>
+                <Text style={styles.error}>{errors.email}</Text>
               )}
 
               {/* PASSWORD */}
-              <Text style={styles.label}>Password</Text>
-              <View
-                style={{
-                  borderWidth: 1,
-                  borderColor:
-                    errors.password && touched.password ? "red" : "#ccc",
-                  borderRadius: 30,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  paddingHorizontal: 10,
-                  marginBottom: 5,
-                }}
-              >
+              <View style={styles.passwordWrapper}>
+                <Text style={styles.label}>Password*</Text>
                 <TextInput
-                  value={values.password}
-                  placeholder="**********"
-                  onChangeText={handleChange("password")}
+                  placeholder="Enter your password"
+                  placeholderTextColor={colors.textDisabled}
+                  style={styles.input}
                   secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  style={{
-                    flex: 1,
-                    color: colors.textPrimary,
-                  }}
+                  onChangeText={handleChange("password")}
+                  onBlur={handleBlur("password")}
+                  value={values.password}
                 />
 
                 <Ionicons
                   name={showPassword ? "eye-off" : "eye"}
-                  size={20}
+                  size={17}
+                  style={{
+                    position: "absolute",
+                    right: 14,
+                    top: 49,
+                  }}
                   color="#6B7280"
                   onPress={() => setShowPassword((prev) => !prev)}
                 />
               </View>
 
               {touched.password && errors.password && (
-                <Text style={{ color: "red" }}>{errors.password}</Text>
+                <Text style={styles.error}>{errors.password}</Text>
               )}
 
               {/* SERVER ERROR */}
@@ -182,8 +169,7 @@ export default function LoginScreen() {
 
               {/* LOGIN BUTTON */}
               <CustomButton
-                title="Login"
-                disabled={loading}
+                title="Login to your Decal account"
                 onPress={handleSubmit}
                 variant="primary"
                 loading={isSubmitting}
@@ -194,6 +180,31 @@ export default function LoginScreen() {
                   color: "#fff",
                 }}
               />
+
+              <Text
+                style={{
+                  fontSize: 13,
+                  padding: 7,
+                  marginVertical: 10,
+                  textAlign: "center",
+                  color: colors.textDisabled,
+                }}
+              >
+                ------------------------------ or ------------------------------
+              </Text>
+
+              {/* GOOGLE LOGIN */}
+              <View style={{ marginTop: 10 }}>
+                <CustomButton
+                  title="Sign In with Google"
+                  onPress={signInWithGoogle}
+                  variant="outline"
+                  textStyle={{
+                    color: colors.textPrimary,
+                    paddingLeft: 20,
+                  }}
+                />
+              </View>
               <View
                 style={{
                   paddingHorizontal: 4,
@@ -227,57 +238,57 @@ export default function LoginScreen() {
                     textAlign: "center",
                   }}
                 >
-                  Forgot Password
+                  I forgot my password
                 </Link>
-              </View>
-
-              <Text
-                style={{
-                  fontSize: 13,
-                  padding: 7,
-                  marginVertical: 10,
-                  textAlign: "center",
-                  color: colors.textDisabled,
-                }}
-              >
-                ------------------------------------------ OR
-                -----------------------------------------
-              </Text>
-
-              {/* GOOGLE LOGIN */}
-              <View style={{ marginTop: 10 }}>
-                <CustomButton
-                  title="Sign In with Google"
-                  leftIcon={
-                    <Image
-                      source={require("@/assets/images/google-icon.png")}
-                      style={{
-                        width: 20,
-                        height: 20,
-                        borderRadius: 100,
-                      }}
-                    />
-                  }
-                  onPress={signInWithGoogle}
-                  variant="outline"
-                  textStyle={{
-                    color: colors.textPrimary,
-                    paddingLeft: 20,
-                  }}
-                />
               </View>
             </>
           )}
         </Formik>
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: 13,
+    backgroundColor: "#ffffff",
+    justifyContent: "center",
+  },
+  title: {
+    textAlign: "center",
+    fontSize: 30,
+    marginTop: 100,
+    color: colors.surface,
+  },
+  subtitle: {
+    color: colors.surface,
+    fontSize: 13,
+    textAlign: "center",
+  },
+  error: {
+    color: colors.error,
+    marginBottom: 8,
+    paddingHorizontal: 10,
+    fontSize: 13,
+  },
   label: {
-    color: "#121212",
+    color: colors.textPrimary,
     fontSize: 15,
     padding: 2,
+  },
+  input: {
+    backgroundColor: colors.background,
+    borderColor: colors.textDisabled,
+    borderWidth: 1,
+    padding: 14,
+    borderRadius: 30,
+    marginBottom: 8,
+    marginTop: 10,
+    color: colors.textPrimary,
+  },
+  passwordWrapper: {
+    position: "relative",
   },
 });

@@ -4,7 +4,9 @@ import React from 'react'
 const ForgotPassword = () => {
   return (
     <View>
-      <Text>ForgotPassword</Text>
+      <Text>Check you Email</Text>
+      <Text>Enter the OTP sent to your email to reset your password.</Text>
+        
     </View>
   )
 }
